@@ -1,7 +1,14 @@
 use ::libc;
 use digest::DynDigest;
 use hmac::{Hmac, Mac};
-use libc::{__errno_location, getrandom, size_t, ssize_t};
+use libc::{size_t};
+#[cfg(target_os = "linux")]
+use libc::{__errno_location, getrandom, c_char, ssize_t};
+#[cfg(target_os = "macos")]
+use {
+    rand::{Rng, thread_rng},
+    std::slice
+};
 use md5::Md5;
 use sha1::Sha1;
 use sha2::Sha256;
@@ -93,6 +100,7 @@ pub struct _gc_cipher_ctx {
 FLAGS.  BUFFER contains LENGTH bytes.  Inspired by getentropy,
 however LENGTH is not restricted to 256.  Return 0 on success, -1
 (setting errno) on failure.  */
+#[cfg(target_os = "linux")]
 unsafe fn randomize(
     mut buffer: *mut libc::c_void,
     mut length: size_t,
@@ -121,6 +129,21 @@ unsafe fn randomize(
     }
     return GC_RANDOM_ERROR as libc::c_int;
 }
+
+/* Overwrite BUFFER with random data. BUFFER contains LENGTH bytes. FLAGS are ignored. Return 0 on success  */
+#[cfg(target_os = "macos")]
+unsafe fn randomize(
+    mut buffer: *mut libc::c_void,
+    mut length: size_t,
+    mut _flags: libc::c_uint,
+) -> libc::c_int {
+    let mut buf= slice::from_raw_parts_mut(buffer as *mut libc::c_char, length);
+    match thread_rng().try_fill(buf) {
+        Ok(_) => GC_OK as libc::c_int,
+        Err(_) => GC_RANDOM_ERROR as libc::c_int,
+    }
+}
+
 /* Randomness. */
 pub unsafe fn gc_nonce(mut data: *mut libc::c_char, mut datalen: size_t) -> Gc_rc {
     return randomize(
