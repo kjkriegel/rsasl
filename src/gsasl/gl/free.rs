@@ -1,5 +1,9 @@
 use ::libc;
-use libc::{__errno_location, free};
+use libc::free;
+#[cfg(target_os = "linux")]
+use libc::__errno_location;
+#[cfg(target_os = "macos")]
+use libc::__error;
 
 /* A GNU-like <stdlib.h>.
 
@@ -37,8 +41,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 /* Specification.  */
 /* A function definition is only needed if HAVE_FREE_POSIX is not defined.  */
 
+#[cfg(target_os = "linux")]
 pub unsafe fn rpl_free(mut p: *mut libc::c_void) {
     let mut err: libc::c_int = *__errno_location();
     free(p);
     *__errno_location() = err;
+}
+
+#[cfg(target_os = "macos")]
+pub unsafe fn rpl_free(mut p: *mut libc::c_void) {
+    let mut err: libc::c_int = *__error();
+    free(p);
+    *__error() = err;
 }
