@@ -97,7 +97,7 @@ pub unsafe fn _gsasl_saml20_server_step(
             }
             input = input.offset(headerlen as isize);
             input_len =
-                (input_len as libc::c_ulong).wrapping_sub(headerlen as u64) as size_t as size_t;
+                (input_len as libc::c_ulong).wrapping_sub(headerlen as _) as size_t as size_t;
             res = gsasl_property_set_raw(sctx, GSASL_SAML20_IDP_IDENTIFIER, input, input_len);
             if res != GSASL_OK as libc::c_int {
                 return res;

@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use crate::gsasl::gc::GC_OK;
 use crate::gsasl::gl::gc_gnulib::gc_nonce;
 use ::libc;
@@ -49,14 +50,14 @@ pub unsafe fn cram_md5_challenge(challenge: *mut libc::c_char) -> libc::c_int {
     }
     let mut i = 0;
     while i < ::std::mem::size_of::<[libc::c_char; 10]>() {
-        *challenge.offset((1 as libc::c_int as libc::c_ulong).wrapping_add(i as u64) as isize) =
+        *challenge.offset((1 as libc::c_int as libc::c_ulong).wrapping_add(i as _) as isize) =
             if nonce[i as usize] as libc::c_int & 0xf as libc::c_int > 9 as libc::c_int {
                 ('0' as i32 + (nonce[i as usize] as libc::c_int & 0xf as libc::c_int))
                     - 10 as libc::c_int
             } else {
                 ('0' as i32) + (nonce[i as usize] as libc::c_int & 0xf as libc::c_int)
             } as libc::c_char;
-        *challenge.offset((11 as libc::c_int as libc::c_ulong).wrapping_add(i as u64) as isize) =
+        *challenge.offset((11 as libc::c_int as libc::c_ulong).wrapping_add(i as _) as isize) =
             if nonce[i as usize] as libc::c_int >> 4 as libc::c_int & 0xf as libc::c_int
                 > 9 as libc::c_int
             {
