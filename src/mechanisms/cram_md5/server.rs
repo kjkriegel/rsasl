@@ -11,7 +11,7 @@ use crate::property::Password;
 use crate::session::SessionData;
 use crate::Shared;
 use ::libc;
-use libc::{calloc, malloc, memcmp, memcpy, size_t, strdup, strlen};
+use libc::{c_char, calloc, malloc, memcmp, memcpy, size_t, strdup, strlen};
 use std::ffi::CString;
 use std::ptr::NonNull;
 
@@ -60,7 +60,7 @@ pub unsafe fn _gsasl_cram_md5_server_step(
     if input_len <= (16 * 2) {
         return GSASL_MECHANISM_PARSE_ERROR as libc::c_int;
     }
-    if *input.offset(input_len.wrapping_sub(16 * 2).wrapping_sub(1) as isize) != ' ' as i8 {
+    if *input.offset(input_len.wrapping_sub(16 * 2).wrapping_sub(1) as isize) != ' ' as c_char {
         return GSASL_MECHANISM_PARSE_ERROR as libc::c_int;
     }
     username = calloc(1, input_len.wrapping_sub(16 * 2)) as *mut libc::c_char;
